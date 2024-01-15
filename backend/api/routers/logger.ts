@@ -1,4 +1,3 @@
-import e from 'express';
 import winston from 'winston';
 const { combine, timestamp, json } = winston.format;
 

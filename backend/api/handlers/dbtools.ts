@@ -9,7 +9,7 @@ export const getDb = async () => {
 	const adapter = new JSONFile<IDatabase>(dbPathAndFileName);
 	const db: Low<IDatabase> = new Low<IDatabase>(adapter, {} as IDatabase);
 	await db.read();
-	if (db.data.flashcards.length === 0) {
+	if (Object.keys(db.data).length === 0) {
 		return null;
 	} else {
 		return db;

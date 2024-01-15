@@ -3,7 +3,7 @@ import express, { NextFunction } from 'express';
 import { flashcardRouter } from './routers/flashcardRouter';
 import cors from 'cors';
 import { maintenanceMode } from './middleware/maintenanceMode';
-import { logger, morganRouteLogger } from './logger';
+import { logger, morganRouteLogger } from './routers/logger';
 
 export const app = express();
 app.use(express.json());
@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
 	})
 });
 
-app.use('/api/flashcards', flashcardRouter);
+app.use('/api/learn101/flashcards', flashcardRouter);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: NextFunction) => {
 	console.error(err.message)

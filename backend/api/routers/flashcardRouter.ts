@@ -1,61 +1,64 @@
 import { Router } from 'express';
-import * as flashcardHandlers from '../handlers/flashcardHandlers';
-import { IFlashcard, INewFlashcard, IPatchFlashcard } from '../../../src/shared/interfaces';
-import { flashcardSuuidValidate } from '../middleware/flashcardSuuidValidate';
-import { flashcardPostCleanAndValidate } from '../middleware/flashcardPostCleanAndValidate';
-import { logger } from './logger';
+import { getArrayOfLogObjects, getLogBackgroundColorByLevel, getLogTextColorByLevel } from '../handlers/dbtools';
 
-export const flashcardRouter = Router();
+export const flashcardInfoRouter = Router();
 
-flashcardRouter.get('/', (_req, res) => {
-	const flashcards = flashcardHandlers.getAllFlashcards();
-	res.json(flashcards);
-});
-
-flashcardRouter.get('/:suuid', flashcardSuuidValidate, (req, res) => {
-	const suuid = req.params.suuid;
-	const flashcard = flashcardHandlers.getOneFlashcard(suuid);
-	if (flashcard) {
-		res.json(flashcard);
-	} else {
-		res.status(404).json(`Flashcard with suuid "${suuid}" not found.`)
-	}
-});
-
-flashcardRouter.post('/', flashcardPostCleanAndValidate, async (req, res) => {
-	const newFlashcard: INewFlashcard = req.body;
-	const flashcard = await flashcardHandlers.addFlashcard(newFlashcard);
-	res.status(201).json(flashcard);
-});
-
-flashcardRouter.put('/', async (req, res) => {
-	const flashcard: IFlashcard = req.body;
-	const replacedFlashcard = await flashcardHandlers.replaceFlashcard(flashcard);
-	if (replacedFlashcard) {
-		res.json(replacedFlashcard);
-	} else {
-		res.status(404).json(`Flashcard with suuid "${flashcard.suuid}" not found.`)
-	}
-});
-
-flashcardRouter.patch('/:suuid', flashcardSuuidValidate, async (req, res) => {
-	const suuid = req.params.suuid;
-	const patchFlashcard: IPatchFlashcard = req.body;
-	const replacedFlashcard = await flashcardHandlers.replaceSomeFieldsInFlashcard(suuid, patchFlashcard);
-	if (replacedFlashcard) {
-		res.json(replacedFlashcard);
-	} else {
-		res.status(404).json(`Flashcard with suuid "${suuid}" not found.`)
-	}
-});
-
-flashcardRouter.delete('/:suuid', flashcardSuuidValidate, async (req, res) => {
-	const suuid = req.params.suuid;
-	const deletedFlashcard = await flashcardHandlers.deleteFlashcard(suuid);
-	if (deletedFlashcard) {
-		res.json(deletedFlashcard);
-	} else {
-		logger.warn('user tried to delete following suuid: ' + suuid)
-		res.status(404).json(`Flashcard with suuid "${suuid}" not found.`)
-	}
+flashcardInfoRouter.get('/logs', async (req, res) => {
+	const logs = await getArrayOfLogObjects();
+	console.log(logs);
+	res.send(`
+<html>
+    <head>
+        <style>
+            body {
+                font-family: monospace;
+            }
+            table {
+                border-spacing: 5px;
+            }
+            th {
+                text-align: left;
+            }
+            td {
+                margin: 10px;
+                padding: 3px;
+                vertical-align: top;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>API Logs</h1>
+        <table>
+            <thead>
+                <tr>
+                <th>Level</th>
+                <th>Timestamp</th>
+                <th>Message</th>
+                <th>Method</th>
+                <th>URL</th>
+                <th>Status</th>
+                <th>Remote Address</th>
+                <th>Response Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            ${logs.map(log => {
+		return `
+                <tr style="background-color: ${getLogBackgroundColorByLevel(log.level)}; color: ${getLogTextColorByLevel(log.level)}">
+                    <td>${log.level}</td>
+                    <td>${log.timestamp}</td>
+                    <td>${log.message}</td>
+                    <td>${log.method}</td>
+                    <td>${log.url}</td>
+                    <td>${log.status}</td>
+                    <td>${log.remoteAddr}</td>
+                    <td>${log.responseTime}</td>
+                </tr>
+                `
+	}).join('')}
+            </body>
+        </table>
+    </body>
+</html>
+    `)
 })

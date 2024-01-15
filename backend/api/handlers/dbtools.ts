@@ -5,11 +5,15 @@ import { IDatabase } from '../../../src/shared/interfaces';
 
 export const getDb = async () => {
 	const projectBasePath = process.cwd();
-	const dbPathAndFileName = join(projectBasePath, 'backend/data/db.json');
+	const dbPathAndFileName = join(projectBasePath, 'nnn/backend/data/db.json');
 	const adapter = new JSONFile<IDatabase>(dbPathAndFileName);
 	const db: Low<IDatabase> = new Low<IDatabase>(adapter, {} as IDatabase);
 	await db.read();
-	return db;
+	if (db.data.flashcards.length === 0) {
+		return null;
+	} else {
+		return db;
+	}
 }
 
 export const getSuuid = () => {
@@ -23,4 +27,9 @@ export const getSuuid = () => {
 	}
 
 	return suuid;
+}
+
+export const suuidIsValid = (text: string) => {
+	const suuidRegex = /^[a-zA-Z0-9]{6}$/;
+	return suuidRegex.test(text);
 }
